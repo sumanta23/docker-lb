@@ -4,6 +4,7 @@ app:
     SERVICE_80_NAME: http
     SERVICE_NAME: app
     SERVICE_TAGS: production
+    SERVICE_PORT: 8080
   volumes:
    - /home/sam/Desktop/docker-loadbalancer/cluster/server.xml:/usr/local/tomcat/conf/server.xml
    - /home/sam/Desktop/docker-loadbalancer/cluster/ROOT:/usr/local/tomcat/webapps/ROOT
