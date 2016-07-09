@@ -1,0 +1,51 @@
+app:
+  image: myjboss
+  environment:
+    SERVICE_80_NAME: http
+    SERVICE_NAME: app
+    SERVICE_TAGS: production
+    SERVICE_PORT: 8080
+  volumes:
+   - ./cluster-client/target/cluster-client.war:/jboss/standalone/deployments/cluster-client.war
+   - ./cluster/launch.sh:/jboss/bin/launch.sh
+   - /tmp/ipa.properties:/tmp/ipa.properties
+  working_dir: /jboss/bin/
+  command: bash launch.sh  
+  ports:
+  - "8080"
+
+ejb:
+  image: myjboss
+  volumes:
+   - ./cluster-ear/target/cluster-ear.ear:/jboss/standalone/deployments/cluster-ear.ear
+   - ./cluster/launch.sh:/jboss/bin/launch.sh
+  working_dir: /jboss/bin/
+  command: bash launch.sh  
+  ports:
+  - "8080"
+  - "4447"
+
+
+lb:
+  build: ./
+  links:
+  - consul
+  ports:
+  - "88:80"
+
+consul:
+  command: -server -bootstrap -advertise 172.17.0.1
+  image: progrium/consul:latest
+  ports:
+  - "8300:8300"
+  - "8400:8400"
+  - "8500:8500"
+  - "8600:53/udp"
+
+registrator:
+  command: consul://consul:8500
+  image: gliderlabs/registrator:latest
+  links:
+  - consul
+  volumes:
+  - "/var/run/docker.sock:/tmp/docker.sock"

@@ -1,0 +1,131 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<artifactId>cluster-app</artifactId>
+		<groupId>org.sumanta.jbosscc</groupId>
+		<version>1.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>cluster-ear</artifactId>
+	<packaging>ear</packaging>
+
+	<name>[${project.parent.artifactId}] EAR module</name>
+
+	<properties>
+		<version.jboss-as-maven-plugin>${version.jboss.as}</version.jboss-as-maven-plugin>
+		<version.maven-ear-plugin>2.7</version.maven-ear-plugin>
+		<project.ear.contextRoot>${project.parent.artifactId}</project.ear.contextRoot>
+		<project.war.contextRoot>/${project.parent.artifactId}</project.war.contextRoot>
+	</properties>
+
+	<build>
+		<finalName>cluster-ear</finalName>
+		<outputDirectory>${project.parent.artifactId}-${project.version}</outputDirectory>
+		<plugins>
+			<plugin>
+				<groupId>org.jboss.as.plugins</groupId>
+				<artifactId>jboss-as-maven-plugin</artifactId>
+				<version>7.1.1.Final</version>
+				<configuration>
+					<filename>${project.parent.artifactId}.${project.packaging}</filename>
+					<skip>false</skip>
+				</configuration>
+			</plugin>
+			<plugin>
+			<groupId>org.apache.maven.plugins</groupId>
+			<artifactId>maven-dependency-plugin</artifactId>
+			<executions>
+				<execution>
+					<id>copy-dependencies</id>
+					<phase>prepare-package</phase>
+					<goals>
+						<goal>copy-dependencies</goal>
+					</goals>
+					<configuration>
+						<outputDirectory>${project.build.directory}/lib</outputDirectory>
+						<overWriteReleases>false</overWriteReleases>
+						<overWriteSnapshots>false</overWriteSnapshots>
+						<overWriteIfNewer>true</overWriteIfNewer>
+					</configuration>
+				</execution>
+			</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-ear-plugin</artifactId>
+				<version>${version.maven-ear-plugin}</version>
+
+				<configuration>
+					<version>6</version>
+					<skinnyWars>true</skinnyWars>
+					<workDirectory>target/${project.parent.artifactId}-${project.version}</workDirectory>
+					<defaultLibBundleDir>lib/</defaultLibBundleDir>
+					<description>${project.parent.artifactId} JEE6 service</description>
+					<displayName>${project.parent.artifactId} JEE6 service</displayName>
+
+					<archive>
+						<manifestEntries>
+							<Dependencies>${project.ear.Dependencies}</Dependencies>
+						</manifestEntries>
+					</archive>
+
+					<modules>
+						<ejbModule>
+							<groupId>${project.groupId}</groupId>
+							<artifactId>cluster-server</artifactId>
+						</ejbModule>
+					</modules>
+				</configuration>
+			</plugin>
+		</plugins>
+
+		<pluginManagement>
+			<plugins>
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>
+											org.codehaus.mojo
+										</groupId>
+										<artifactId>
+											build-helper-maven-plugin
+										</artifactId>
+										<versionRange>
+											[1.7,)
+										</versionRange>
+										<goals>
+											<goal>regex-property</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+	<dependencies>
+		<dependency>
+			<groupId>${project.groupId}</groupId>
+			<artifactId>cluster-server</artifactId>
+			<version>${project.version}</version>
+			<type>ejb</type>
+		</dependency>
+	</dependencies>
+
+
+</project>
