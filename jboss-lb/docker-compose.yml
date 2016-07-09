@@ -6,8 +6,8 @@ app:
     SERVICE_TAGS: production
     SERVICE_PORT: 8080
   volumes:
-   - cluster/Math-ear-1.0.ear:/jboss/standalone/deployments/Math-ear-1.0.ear
-   - cluster/launch.sh:/jboss/bin/launch.sh
+   - ./cluster/Math-ear-1.0.ear:/jboss/standalone/deployments/Math-ear-1.0.ear
+   - ./cluster/launch.sh:/jboss/bin/launch.sh
   working_dir: /jboss/bin/
   command: bash launch.sh  
   ports:
