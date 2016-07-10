@@ -1,7 +1,7 @@
 #!/bin/bash
       
-./add-user.sh sam Pass@1234 --silent
-./add-user.sh -a app Pass@1234 --silent
+./add-user.sh sam Pass@1234 --silent=true
+./add-user.sh -a app Pass@1234 --silent=true
 
 IPADDR=$(ip a s | sed -ne '/127.0.0.1/!{s/^[ \t]*inet[ \t]*\([0-9.]\+\)\/.*$/\1/p}')
       

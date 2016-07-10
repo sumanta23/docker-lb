@@ -7,85 +7,76 @@ import javax.naming.Context;
 import javax.naming.InitialContext;
 import javax.naming.NamingException;
 
-import org.jboss.ejb.client.ContextSelector;
+import org.jboss.ejb.client.EJBClient;
 import org.jboss.ejb.client.EJBClientContext;
 import org.jboss.ejb.client.PropertiesBasedEJBClientConfiguration;
+import org.jboss.ejb.client.StatelessEJBLocator;
 import org.jboss.ejb.client.remoting.ConfigBasedEJBClientContextSelector;
-import org.sumanta.jbosscc.api.RemoteStateless;
 
+/**
+ *  * Class EJBLocator is the class to connect with EJB  *
+ */
 public class RemoteEJBClient {
-    /**
-     * The application may be initialized either via the properties files jndi.properties and jboss-ejb-client.properties, or purely programmatically without any properties files. If this is set to
-     * true, an existing jboss-ejb-client.properties file may lead to conflicts. Also, the initial servers must all be up and running (unlike when using jboss-ejb-client.properties).
-     */
-    private static final boolean PROGRAMMATIC_INITIALIZATION = true;
 
-    private Context context;
-
-    public RemoteEJBClient() throws NamingException {
-        context = initializeJNDIContext();
-
-        // Initialize EJB client context by setting a new context selector
-        if (PROGRAMMATIC_INITIALIZATION) {
-            //initializeEJBClientContext();
-        }
-    }
-
-    private Context initializeJNDIContext() throws NamingException {
-        Context jndiContext;
-
-        if (PROGRAMMATIC_INITIALIZATION) {
-            Properties jndiProperties = new Properties();
-            jndiProperties.put(Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
-            jndiContext = new InitialContext(jndiProperties);
-        } else {
-            jndiContext = new InitialContext();
-        }
-        return jndiContext;
-    }
-
-    private void initializeEJBClientContext() throws NamingException {
+    @SuppressWarnings("unchecked")
+    public static <T> T locateEJB(String jndi) throws NamingException {
+        Properties clientProperties = new Properties();
         Random random = new Random();
-        Properties properties = new Properties();
-
-        properties.put("endpoint.name", "client-endpoint");
-
-        properties.put("remote.connectionprovider.create.options.org.xnio.Options.SSL_ENABLED", "false");
         IpaddressHolder.read();
+        
+        clientProperties.put("remote.connectionprovider.create.options.org.xnio.Options.SSL_ENABLED", "false");
+        clientProperties.put("remote.connections", "default");
+        clientProperties.put("remote.connection.default.port", "4447");
+        clientProperties.put("remote.connection.default.host",  IpaddressHolder.ipa.get(random.nextInt((IpaddressHolder.ipa.size()))));
+        clientProperties.put("remote.connection.default.username", "app");
+        clientProperties.put("remote.connection.default.password", "Pass@1234");
+        clientProperties.put("remote.connection.default.connect.options.org.xnio.Options.SASL_POLICY_NOANONYMOUS", "false");
+        clientProperties.put("remote.connection.default.connect.options.org.xnio.Options.SASL_POLICY_NOPLAINTEXT","false");
+
+        EJBClientContext.setSelector(new ConfigBasedEJBClientContextSelector(new PropertiesBasedEJBClientConfiguration(clientProperties)));
+
+        Properties properties = new Properties();
+        
+        properties.put(Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
+        Context context = new InitialContext(properties);
+        return (T) context.lookup(jndi);
+    }
+
+    /**
+     * Method locateEJBStateless locates an Stateless EJB for the given parameters
+     * 
+     * @author Sumanta
+     * @since 1.0
+     * @param viewType
+     *              - the view type
+     * @param appName
+     *              - the application name
+     * @param moduleName
+     *              - the module name
+     * @param beanName
+     *              - the bean name
+     * @param distinctName
+     *              - the distinct name
+     * @return an instance of EJB
+     */
+    public static <T> T locateEJBStateless(Class<T> viewType, String appName, String moduleName, String beanName, String distinctName) {
+        Properties properties = new Properties();
+        Random random = new Random();
+        IpaddressHolder.read();
+        
+        properties.put("endpoint.name", "client-endpoint");
+        properties.put("remote.connectionprovider.create.options.org.xnio.Options.SSL_ENABLED", "false");
         properties.put("remote.connections", "default");
-        properties.put("remote.connection.default.host", IpaddressHolder.ipa.get(random.nextInt((IpaddressHolder.ipa.size()))));
         properties.put("remote.connection.default.port", "4447");
-        properties.put("remote.connection.default.connect.options.org.xnio.Options.SASL_POLICY_NOANONYMOUS", "false");
-        properties.put("remote.connection.ejb.connect.options.org.xnio.Options.SASL_POLICY_NOPLAINTEXT", "false");
+        properties.put("remote.connection.default.host",  IpaddressHolder.ipa.get(random.nextInt((IpaddressHolder.ipa.size()))));
         properties.put("remote.connection.default.username", "app");
         properties.put("remote.connection.default.password", "Pass@1234");
+        properties.put("remote.connection.default.connect.options.org.xnio.Options.SASL_POLICY_NOANONYMOUS", "false");
+        properties.put("remote.connection.default.connect.options.org.xnio.Options.SASL_POLICY_NOPLAINTEXT","false");
 
-        
-        PropertiesBasedEJBClientConfiguration configuration = new PropertiesBasedEJBClientConfiguration(properties);
-         
-        final ContextSelector<EJBClientContext> ejbClientContextSelector = new ConfigBasedEJBClientContextSelector(configuration);
-        
-        final ContextSelector<EJBClientContext> previousSelector = EJBClientContext.setSelector(ejbClientContextSelector);
-         
-
-        /*EJBClientConfiguration ejbClientConfiguration = new PropertiesBasedEJBClientConfiguration(properties);
-        ContextSelector<EJBClientContext> contextSelector = new ConfigBasedEJBClientContextSelector(ejbClientConfiguration);
-        //EJBClientContext.setSelector(contextSelector);
-*/    }
-
-    public RemoteStateless lookupRemoteStatelessBean() throws NamingException {
-        final String appName = "cluster-ear";
-        final String moduleName = "cluster"; // module-name in ejb-jar.xml
-        final String distinctName = ""; // jboss:distinct-name in jboss-ejb3.xml
-        final String beanName = "ClusteredStatelessBean";
-
-        final String jndiName = "ejb:" + appName + '/' + moduleName + '/' + distinctName+'/' + beanName + '!' + RemoteStateless.class.getName();
-        System.out.println(jndiName);
-        Properties properties = new Properties();
-        properties.put(Context.URL_PKG_PREFIXES, "org.jboss.ejb.client.naming");
-        properties.put("jboss.naming.client.ejb.context", "true");
-        Context context = new InitialContext(properties);
-        return (RemoteStateless) context.lookup(jndiName);
+        EJBClientContext.setSelector(new ConfigBasedEJBClientContextSelector(new PropertiesBasedEJBClientConfiguration(properties)));
+        StatelessEJBLocator<T> locator = new StatelessEJBLocator<T>(viewType, appName, moduleName, beanName, distinctName);
+        T ejb = EJBClient.createProxy(locator);
+        return ejb;
     }
-
 }

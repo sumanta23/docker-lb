@@ -8,7 +8,6 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import org.jboss.ejb.client.StatelessEJBLocator;
 import org.sumanta.jbosscc.api.RemoteStateless;
 
 @WebServlet(value = "/Calc", name = "Calc")
@@ -38,7 +37,10 @@ public class Calc extends HttpServlet {
 
             RemoteEJBClient rec=new RemoteEJBClient();
             
-            RemoteStateless ejb =  rec.lookupRemoteStatelessBean();
+            String jndi = "ejb:cluster-ear/cluster/ClusteredStatelessBean!org.sumanta.jbosscc.api.RemoteStateless";
+            RemoteStateless ejb = rec.locateEJB(jndi);
+            
+            //RemoteStateless ejb = rec.locateEJBStateless(RemoteStateless.class, "cluster-ear", "cluster", "ClusteredStatelessBean", "");
 
             response.getWriter().append("nodenamd:" + ejb.getNodeName());
         } catch (Exception e) {

@@ -13,6 +13,8 @@ app:
   command: bash launch.sh  
   ports:
   - "8080"
+  - "9990"
+  - "8787:8787"
 
 ejb:
   image: myjboss
@@ -24,6 +26,7 @@ ejb:
   ports:
   - "8080"
   - "4447"
+  - "9990"
 
 
 lb:
